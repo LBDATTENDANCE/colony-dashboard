@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LBD | Colony Monthly Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <style>
+    :root {
+      --primary-dark: #1a1a1a;
+      --accent-gold: #D4AF37;
+      --bg-light: #f8f9fa;
+      --glass-white: rgba(255, 255, 255, 0.95);
+      --border-radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    body { 
+      font-family: 'Lexend', sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      background-color: var(--bg-light); 
+      color: var(--primary-dark);
+      line-height: 1.6;
+    }
+
+    .container { max-width: 1300px; margin: 0 auto; padding: 40px 20px; }
+
+    /* Header Redesign */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      background: var(--primary-dark);
+      padding: 30px 50px;
+      border-radius: var(--border-radius);
+      color: white;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    .logo-img { max-height: 50px; filter: brightness(0) invert(1); cursor: pointer; transition: 0.3s; }
+    .logo-img:hover { transform: translateY(-2px); }
+
+    .header-titles { text-align: right; }
+    .header-titles h1 { 
+      margin: 0; 
+      font-size: 28px; 
+      font-weight: 900; 
+      letter-spacing: -1px; 
+      text-transform: uppercase;
+    }
+    .header-titles h2 { 
+      margin: 0; 
+      font-size: 14px; 
+      font-weight: 400; 
+      color: var(--accent-gold); 
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    /* Winner Spotlight */
+    .winner-box {
+      background: white;
+      border-left: 8px solid var(--accent-gold);
+      padding: 40px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .winner-box::after {
+      content: 'WINNER';
+      position: absolute;
+      right: -20px;
+      bottom: -10px;
+      font-size: 120px;
+      font-weight: 900;
+      color: rgba(0,0,0,0.03);
+      pointer-events: none;
+    }
+
+    .winner-intro { font-size: 22px; font-weight: 600; color: #444; margin-bottom: 15px; }
+    .highlight-gold { color: var(--accent-gold); font-weight: 900; border-bottom: 2px solid var(--accent-gold); }
+    
+    .call-to-action { font-size: 16px; color: #666; max-width: 800px; }
+    .cta-highlight { display: block; margin-top: 15px; color: var(--primary-dark); font-weight: 700; font-style: italic; }
+
+    /* Layout Grid */
+    .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-bottom: 30px; }
+
+    .chart-container { 
+      background: white; 
+      padding: 30px; 
+      border-radius: var(--border-radius); 
+      box-shadow: var(--shadow);
+      height: 450px;
+    }
+
+    .stats-sidebar { display: flex; flex-direction: column; gap: 30px; }
+
+    .score-card {
+      background: var(--primary-dark);
+      color: white;
+      padding: 40px;
+      border-radius: var(--border-radius);
+      text-align: center;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .score-card:hover { transform: scale(1.02); }
+
+    .score-label { text-transform: uppercase; letter-spacing: 2px; font-size: 12px; color: var(--accent-gold); font-weight: 700; }
+    .score-value { font-size: 90px; font-weight: 900; line-height: 1; margin: 15px 0; }
+    .score-goal { font-size: 14px; opacity: 0.7; }
+
+    /* Filter Controls */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    select {
+      background: #333;
+      border: 1px solid #444;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Table Design */
+    .table-section { 
+      background: white; 
+      padding: 40px; 
+      border-radius: var(--border-radius); 
+      box-shadow: var(--shadow); 
+    }
+
+    .nav-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 30px; 
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .nav-btn { 
+      background: var(--primary-dark); 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 10px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      transition: 0.2s;
+    }
+    .nav-btn:hover { background: var(--accent-gold); color: black; }
+    .nav-btn:disabled { background: #eee; color: #bbb; cursor: not-allowed; }
+
+    #weekLabel { font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+    table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+    th { padding: 15px; font-size: 11px; text-transform: uppercase; color: #888; letter-spacing: 1px; border-bottom: 2px solid #f0f0f0; }
+    td { padding: 20px 15px; background: #fafafa; transition: 0.2s; }
+    tr:hover td { background: #f1f1f1; }
+    td:first-child { border-radius: 10px 0 0 10px; font-weight: 800; }
+    td:last-child { border-radius: 0 10px 10px 0; }
+    
+    .colony-cell { color: var(--primary-dark); }
+
+    @media (max-width: 900px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .header { flex-direction: column; text-align: center; gap: 20px; }
+      .header-titles { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <img src="https://i0.wp.com/lbdnation.org/wp-content/uploads/2024/06/LBD_LOGO_HORIZONTAL.png?w=446&ssl=1" alt="LBD Logo" class="logo-img" onclick="window.print()">
+    <div class="header-titles">
+      <h1>Colony Performance</h1>
+      <h2>Bethel Index • March 2026</h2>
+      <div class="controls">
+        <label style="font-size: 10px; font-weight: 800;">SELECT DATE:</label>
+        <select id="datePicker" onchange="updateDashboard()"></select>
+      </div>
+    </div>
+  </header>
+
+  <section class="winner-box">
+    <div class="winner-intro">
+      Today's Vanguard: The <span id="winColony" class="highlight-gold">---</span> Colony, 
+      commanded by Regent <span id="winRegent" class="highlight-gold">---</span> 
+      with <span id="winScore" class="highlight-gold">---</span> Kinsmen.
+    </div>
+    <div class="call-to-action">
+      <p>Will your colony lead the charge tomorrow? Invest in the Kingdom—bring a soul to Bethel.</p>
+      <span class="cta-highlight">Invite ONE soul to join you in Bethel tomorrow and witness the unfolding of God’s wonders.</span>
+    </div>
+  </section>
+
+  <div class="dashboard-grid">
+    <div class="chart-container">
+      <canvas id="colonyChart"></canvas>
+    </div>
+    
+    <div class="stats-sidebar">
+      <div class="score-card" id="card">
+        <span class="score-label">Total Attendance</span>
+        <div id="totalVal" class="score-value">0</div>
+        <span class="score-goal">Target: 1,000 Kinsmen</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="table-section">
+    <div class="nav-bar">
+      <button id="prevBtn" class="nav-btn" onclick="moveWeek(-1)">PREVIOUS</button>
+      <div id="weekLabel">WEEK 1</div>
+      <button id="nextBtn" class="nav-btn" onclick="moveWeek(1)">NEXT WEEK</button>
+    </div>
+    <table id="attendanceTable">
+      <thead><tr id="tableHeader"><th>Colony</th><th>Regent</th></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </section>
+</div>
+
+<script>
+  const scriptURL = "https://script.google.com/macros/s/AKfycbwK_x4EoQl7sa19Es4IjJGaPPyITQHIAaf1mUaffSXV8T1V3c_EN-Tx5-W9ypKe3sbI/exec";
+  let chartInstance;
+  let currentWeek = 0;
+  Chart.register(ChartDataLabels);
+
+  window.onload = () => {
+    fetch(`${scriptURL}?action=getDates`)
+      .then(res => res.json())
+      .then(dates => {
+        const sel = document.getElementById('datePicker');
+        if(dates && dates.length > 0) {
+          dates.forEach(d => { let opt = document.createElement('option'); opt.value = opt.text = d; sel.add(opt); });
+          updateDashboard();
+          updateTable();
+        }
+      });
+  };
+
+  function updateDashboard() {
+    const date = document.getElementById('datePicker').value;
+    fetch(`${scriptURL}?action=getDashboard&date=${date}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.rows || data.rows.length === 0) return;
+        
+        let winner = data.rows.reduce((prev, current) => (prev.attendance > current.attendance) ? prev : current);
+        document.getElementById('winColony').innerText = winner.colony;
+        document.getElementById('winRegent').innerText = winner.regent || "The Regent";
+        document.getElementById('winScore').innerText = winner.attendance;
+        document.getElementById('totalVal').innerText = data.total;
+        
+        const card = document.getElementById('card');
+        card.style.borderTop = `10px solid ${data.total < 720 ? "#ff5252" : (data.total < 900 ? "#ffd740" : "#69f0ae")}`;
+
+        if(chartInstance) chartInstance.destroy();
+        const ctx = document.getElementById('colonyChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.rows.map(r => r.colony),
+            datasets: [{
+              data: data.rows.map(r => r.attendance),
+              backgroundColor: data.rows.map(r => r.attendance >= 300 ? '#D4AF37' : '#2d2d2d'),
+              borderRadius: 8,
+              barThickness: 35
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: false,
+              datalabels: { anchor: 'end', align: 'top', color: '#1a1a1a', font: { weight: '800', size: 12 } }
+            },
+            scales: { 
+              y: { display: false, beginAtZero: true, suggestedMax: 400 }, 
+              x: { grid: { display: false }, ticks: { font: { weight: '600' } } } 
+            }
+          }
+        });
+      });
+  }
+
+  function moveWeek(dir) { currentWeek += dir; updateTable(); }
+
+  function updateTable() {
+    fetch(`${scriptURL}?action=getTable&week=${currentWeek}`)
+      .then(res => res.json())
+      .then(data => {
+        const head = document.getElementById('tableHeader');
+        const body = document.getElementById('tableBody');
+        head.innerHTML = '<th>COLONY</th><th>REGENT</th>';
+        data.headers.forEach(d => head.innerHTML += `<th>DAY ${d}</th>`);
+        body.innerHTML = '';
+        data.rows.forEach(r => {
+          let tr = `<tr><td class="colony-cell">${r.colony}</td><td>${r.regent}</td>`;
+          r.attendanceRange.forEach(v => tr += `<td>${v}</td>`);
+          body.innerHTML += tr + '</tr>';
+        });
+      });
+  }
+</script>
+</body>
+</html>
